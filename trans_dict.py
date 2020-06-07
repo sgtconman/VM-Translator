@@ -1,6 +1,7 @@
 
 c_type = {}
 arith_dict = {}
+pushpop_dict = {}
 
 
 def dict_initializer():
@@ -28,11 +29,8 @@ M=M-D
 """
 
     arith_dict['neg'] = """@SP
-M=M-1
-A=M
+A=M-1
 M=-M
-@SP
-M=M+1
 """
 
 # $$TRUE$$ will be replaced when translating the code
@@ -47,7 +45,7 @@ M=-1
 @$$TRUE$$
 D;JEQ
 @SP
-A=A-1
+A=M-1
 M=0
 ($$TRUE$$)
 """
@@ -62,7 +60,7 @@ M=-1
 @$$TRUE$$
 D;JGT
 @SP
-A=A-1
+A=M-1
 M=0
 ($$TRUE$$)
 """
@@ -77,7 +75,7 @@ M=-1
 @$$TRUE$$
 D;JLT
 @SP
-A=A-1
+A=M-1
 M=0
 ($$TRUE$$)
 """
@@ -98,10 +96,69 @@ A=A-1
 M=D|M
 """
 
-    arith_dict['neg'] = """@SP
+    arith_dict['not'] = """@SP
+A=M-1
+M=!M
+"""
+
+# template push/pop commands
+    pushpop_dict['pop'] = """@R13
+M=D
+@SP
 M=M-1
 A=M
-M=!M
+D=M
+@R13
+A=M
+M=D
+"""
+
+    pushpop_dict['push'] = """
+D=M
 @SP
 M=M+1
+A=M-1
+M=D
+"""
+
+    pushpop_dict['local'] = """@$i$
+D=A
+@LCL
+AD=D+M
+"""
+
+    pushpop_dict['argument'] = """@$i$
+D=A
+@ARG
+AD=D+M
+"""
+
+    pushpop_dict['this'] = """@$i$
+D=A
+@THIS
+AD=D+M
+"""
+
+    pushpop_dict['that'] = """@$i$
+D=A
+@THAT
+AD=D+M
+"""
+
+    pushpop_dict['static'] = """@$DUMMY$
+"""
+
+    pushpop_dict['temp'] = """@$DUMMY$
+"""
+
+    pushpop_dict['pointer'] = """@$DUMMY$
+D=A
+"""
+
+    pushpop_dict['constant'] = """@$i$
+D=A
+@SP
+M=M+1
+A=M-1
+M=D
 """

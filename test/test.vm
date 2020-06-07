@@ -1,6 +1,1 @@
-add
-sub
-/// gnarly
-push constant 2
-gt
-lt
+push static 2

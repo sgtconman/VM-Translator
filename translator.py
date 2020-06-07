@@ -7,7 +7,7 @@ class line_elements:
         self.type = ''
         self.arg1 = ''
         self.arg2 = ''
-        self.arg3 = 0
+        self.arg3 = ''
 
 # dictionary for command type categories
 
@@ -28,6 +28,10 @@ def main():
     vm_lines = vm_file.readlines()
     vm_file.close()
 
+    # file_name used for naming static variables per specification
+    file_path = vm_file_name.strip(".vm")
+    file_name = file_path.split('/')[-1]
+
     # parser cleans spaces/comments and parses the  vm line elements
     parsed_lines = []
     parser(vm_lines, parsed_lines)
@@ -35,14 +39,13 @@ def main():
     # translates the parsed vm lines into asm code
     asm_lines = []
     for i in range(len(parsed_lines)):
-        code_writer(parsed_lines[i], asm_lines)
-
+        code_writer(parsed_lines[i], asm_lines, file_name)
 
 
 
     # creates .asm output file and opens for writing
-    asm_file_name = vm_file_name.strip(".vm")
-    asm_file_name = asm_file_name + ".asm"
+
+    asm_file_name = file_path + ".asm"
     asm_file = open(asm_file_name, 'w')
     asm_file.writelines(asm_lines)
     asm_file.close()
@@ -71,7 +74,7 @@ def parser(vm_lines, parsed_lines):
             line_count += 1
 
 
-def code_writer(parsed_line, asm_lines):
+def code_writer(parsed_line, asm_lines, file_name):
 
     global relation_count
     asm_lines.append('// ' + parsed_line.line)
@@ -82,8 +85,26 @@ def code_writer(parsed_line, asm_lines):
             asm_lines[-1] = asm_lines[-1].replace('$$TRUE$$', '$$TRUE$$' + str(relation_count)) # if relational operator, replaces template label with unique label
             relation_count += 1
 
-    return
+    if parsed_line.type in ("c_pop" , 'c_push'):
+        asm_lines.append(pushpop_dict[parsed_line.arg2])
+        asm_lines[-1] = asm_lines[-1].replace('$i$', (parsed_line.arg3))
 
+        if parsed_line.arg2 == 'static':
+            if parsed_line.arg1 == 'pop':
+                asm_lines[-1] += "D=A\n"
+            asm_lines[-1] = asm_lines[-1].replace('$DUMMY$', file_name + '.' + str(int(parsed_line.arg3)))
+        if parsed_line.arg2 == 'pointer':
+            if parsed_line.arg3 == 0:
+                asm_lines[-1] = asm_lines[-1].replace('$DUMMY$', 'THIS')
+            else:
+                asm_lines[-1] = asm_lines[-1].replace('$DUMMY$', 'THAT')
+        if parsed_line.arg2 == 'temp':
+            if parsed_line.arg1 == 'pop':
+                asm_lines[-1] += "D=A\n"
+            asm_lines[-1] = asm_lines[-1].replace('$DUMMY$', str(5+int(parsed_line.arg3)))
+
+        if parsed_line.arg2 != 'constant':
+            asm_lines[-1] += pushpop_dict[parsed_line.arg1]
 
 
 
