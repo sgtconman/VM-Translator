@@ -28,13 +28,16 @@ def main():
     vm_lines = vm_file.readlines()
     vm_file.close()
 
+
     # file_name used for naming static variables per specification
     file_path = vm_file_name.strip(".vm")
     file_name = file_path.split('/')[-1]
 
+
     # parser cleans spaces/comments and parses the  vm line elements
     parsed_lines = []
     parser(vm_lines, parsed_lines)
+
 
     # translates the parsed vm lines into asm code
     asm_lines = []
@@ -42,18 +45,15 @@ def main():
         code_writer(parsed_lines[i], asm_lines, file_name)
 
 
-
     # creates .asm output file and opens for writing
-
     asm_file_name = file_path + ".asm"
     asm_file = open(asm_file_name, 'w')
     asm_file.writelines(asm_lines)
     asm_file.close()
 
+
 # parser cleans spaces/comments and parses the  vm line elements
 def parser(vm_lines, parsed_lines):
-
-    # removes leading/trailing spaces and comments, and adds the line as an element of the parsed_line list
 
     line_count = 0
     for i in range(len(vm_lines)):
@@ -74,6 +74,7 @@ def parser(vm_lines, parsed_lines):
             line_count += 1
 
 
+# translates the parsed vm lines into asm code one line at a time
 def code_writer(parsed_line, asm_lines, file_name):
 
     global relation_count
@@ -94,7 +95,7 @@ def code_writer(parsed_line, asm_lines, file_name):
                 asm_lines[-1] += "D=A\n"
             asm_lines[-1] = asm_lines[-1].replace('$DUMMY$', file_name + '.' + str(int(parsed_line.arg3)))
         if parsed_line.arg2 == 'pointer':
-            if parsed_line.arg3 == 0:
+            if int(parsed_line.arg3) == 0:
                 asm_lines[-1] = asm_lines[-1].replace('$DUMMY$', 'THIS')
             else:
                 asm_lines[-1] = asm_lines[-1].replace('$DUMMY$', 'THAT')

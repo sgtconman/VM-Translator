@@ -6,7 +6,7 @@ M=M+1
 A=M-1
 M=D
 // pop pointer 0
-@THAT
+@THIS
 D=A
 @R13
 M=D
@@ -79,7 +79,7 @@ D=M
 A=M
 M=D
 // push pointer 0
-@THAT
+@THIS
 D=A
 
 D=M
