@@ -9,7 +9,6 @@ class line_elements:
         self.arg2 = ''
         self.arg3 = ''
 
-# dictionary for command type categories
 
 # counts number of relational operators to assign unique labels
 relation_count = 0
@@ -18,7 +17,7 @@ relation_count = 0
 def main():
 
     if len(sys.argv) != 2:
-        sys.exit("input 1 argument: [program].vm")
+        sys.exit("input 1 argument: [program].vm or vm file directory")
 
     dict_initializer()
 
@@ -107,6 +106,12 @@ def code_writer(parsed_line, asm_lines, file_name):
         if parsed_line.arg2 != 'constant':
             asm_lines[-1] += pushpop_dict[parsed_line.arg1]
 
+    if parsed_line.arg1 in ('label','goto','if-goto'):
+        asm_lines.append(branch_dict[parsed_line.arg1])
+        asm_lines[-1] = asm_lines[-1].replace('$LABEL$', parsed_line.arg2)
 
+def bootstrapper():
+    return
+    #TBU
 
 main()

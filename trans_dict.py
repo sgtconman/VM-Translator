@@ -2,6 +2,7 @@
 c_type = {}
 arith_dict = {}
 pushpop_dict = {}
+branch_dict = {}
 
 
 def dict_initializer():
@@ -102,7 +103,8 @@ M=!M
 """
 
 # template push/pop commands
-    pushpop_dict['pop'] = """@R13
+    pushpop_dict['pop'] = """
+@R13
 M=D
 @SP
 M=M-1
@@ -124,29 +126,24 @@ M=D
     pushpop_dict['local'] = """@$i$
 D=A
 @LCL
-AD=D+M
-"""
+AD=D+M"""
 
     pushpop_dict['argument'] = """@$i$
 D=A
 @ARG
-AD=D+M
-"""
+AD=D+M"""
 
     pushpop_dict['this'] = """@$i$
 D=A
 @THIS
-AD=D+M
-"""
+AD=D+M"""
 
     pushpop_dict['that'] = """@$i$
 D=A
 @THAT
-AD=D+M
-"""
+AD=D+M"""
 
-    pushpop_dict['static'] = """@$DUMMY$
-"""
+    pushpop_dict['static'] = """@$DUMMY$"""
 
     pushpop_dict['temp'] = """@$DUMMY$
 """
@@ -161,4 +158,19 @@ D=A
 M=M+1
 A=M-1
 M=D
+"""
+
+    branch_dict['label'] = """($LABEL$)
+"""
+
+    branch_dict['goto'] = """@$LABEL$
+0;JMP
+"""
+
+    branch_dict['if-goto'] = """@SP
+M=M-1
+A=M
+D=M
+@$LABEL$
+D;JNE
 """

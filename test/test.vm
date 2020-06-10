@@ -1,1 +1,5 @@
 push static 2
+goto testlabel
+label testlabel
+push constant -1
+if-goto testlabel
