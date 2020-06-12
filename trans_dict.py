@@ -144,8 +144,7 @@ D=A
 @THAT
 AD=D+M"""
 
-    pushpop_dict['static'] = """@$DUMMY$
-"""
+    pushpop_dict['static'] = """@$DUMMY$"""
 
     pushpop_dict['temp'] = """@$DUMMY$
 """

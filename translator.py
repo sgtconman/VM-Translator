@@ -1,6 +1,7 @@
 import sys
 import os
 import glob
+
 from trans_dict import * # uses trans_dict to store dictionaries of hardcoded translation specifications
 
 class line_elements:
@@ -12,7 +13,7 @@ class line_elements:
         self.arg3 = arg3
 
 
-# counts number of relational operators to assign unique labels
+# counts number of relational operators and function calls in order to assign unique assembly labels
 relation_count = 0
 call_count = 0
 
@@ -21,8 +22,10 @@ def main():
     if len(sys.argv) != 2:
         sys.exit("input 1 argument: [program].vm or vm file directory")
 
+    #initializes hard_coded translation libary
     dict_initializer()
 
+    #determines if command line input is file or directory and puts .vm file names in a list
     vm_files = []
     if os.path.isdir(sys.argv[1]):
         dir_path = sys.argv[1]
@@ -30,8 +33,9 @@ def main():
     else:
         vm_files.append(sys.argv[1])
 
-
+    #asm_lines stores all translated code
     asm_lines = []
+
     for file in vm_files:
 
         # opens input .vm file and writes each line to a list
@@ -58,9 +62,10 @@ def main():
         file_path = dir_path + '/' + dir_name
         boot_code = bootstrapper(file_name)
         asm_lines.insert(0, boot_code )
-
     asm_file_name = file_path + ".asm"
     asm_file = open(asm_file_name, 'w')
+
+    # writes translated code to output file
     asm_file.writelines(asm_lines)
     asm_file.close()
 
@@ -68,7 +73,6 @@ def main():
 # parser cleans spaces/comments and parses the  vm line elements
 def parser(vm_lines, parsed_lines):
 
-    line_count = 0
     for i in range(len(vm_lines)):
 
         temp_line = vm_lines[i].split('//')[0].strip() + '\n'
@@ -76,15 +80,13 @@ def parser(vm_lines, parsed_lines):
         if len(temp_line) > 1:
             parsed_lines.append(line_elements(temp_line,'','','',''))
             line_parts = temp_line.split()
-            parsed_lines[line_count].arg1 = line_parts[0]
-            parsed_lines[line_count].type = c_type[line_parts[0]]
+            parsed_lines[-1].arg1 = line_parts[0]
+            parsed_lines[-1].type = c_type[line_parts[0]]
 
             if len(line_parts) >= 2:
-                parsed_lines[line_count].arg2 = line_parts[1]
+                parsed_lines[-1].arg2 = line_parts[1]
             if len(line_parts) == 3:
-                parsed_lines[line_count].arg3 = line_parts[2]
-
-            line_count += 1
+                parsed_lines[-1].arg3 = line_parts[2]
 
 
 # translates the parsed vm lines into asm code one line at a time
@@ -176,7 +178,7 @@ def pushpop_writer(parsed_line, asm_lines, file_name):
 
     if parsed_line.arg2 == 'static':
         if parsed_line.arg1 == 'pop':
-            asm_lines[-1] += "D=A\n"
+            asm_lines[-1] += "\nD=A"
         asm_lines[-1] = asm_lines[-1].replace('$DUMMY$', file_name + '.' + str(int(parsed_line.arg3)))
     if parsed_line.arg2 == 'pointer':
         if int(parsed_line.arg3) == 0:
@@ -200,8 +202,6 @@ def arith_writer(parsed_line, asm_lines):
         relation_count += 1
 
 
-
-
 def bootstrapper(file_name):
     sys_init_code = []
     new_vm_line = line_elements("call Sys.init 0\n","c_call", 'call', 'Sys.init', '0')
@@ -212,5 +212,7 @@ def bootstrapper(file_name):
         boot_code += line
 
     return boot_code
+
+
 
 main()

@@ -65,7 +65,6 @@ M=D
 // pop static 0
 @Class2.0
 D=A
-
 @R13
 M=D
 @SP
@@ -88,7 +87,6 @@ M=D
 // pop static 1
 @Class2.1
 D=A
-
 @R13
 M=D
 @SP
@@ -167,7 +165,6 @@ A=M
 (Class2.get)
 // push static 0
 @Class2.0
-
 D=M
 @SP
 M=M+1
@@ -175,7 +172,6 @@ A=M-1
 M=D
 // push static 1
 @Class2.1
-
 D=M
 @SP
 M=M+1
@@ -516,7 +512,6 @@ M=D
 // pop static 0
 @Class1.0
 D=A
-
 @R13
 M=D
 @SP
@@ -539,7 +534,6 @@ M=D
 // pop static 1
 @Class1.1
 D=A
-
 @R13
 M=D
 @SP
@@ -618,7 +612,6 @@ A=M
 (Class1.get)
 // push static 0
 @Class1.0
-
 D=M
 @SP
 M=M+1
@@ -626,7 +619,6 @@ A=M-1
 M=D
 // push static 1
 @Class1.1
-
 D=M
 @SP
 M=M+1
