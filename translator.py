@@ -1,4 +1,6 @@
 import sys
+import os
+import glob
 from trans_dict import * # uses trans_dict to store dictionaries of hardcoded translation specifications
 
 class line_elements:
@@ -12,7 +14,7 @@ class line_elements:
 
 # counts number of relational operators to assign unique labels
 relation_count = 0
-
+call_count = 0
 
 def main():
 
@@ -21,33 +23,42 @@ def main():
 
     dict_initializer()
 
-
-    # for file in files [to be implemented]
-
-    # opens input .vm file and writes each line to a list
-    vm_file_name = sys.argv[1]
-    vm_file = open(vm_file_name, 'r')
-    vm_lines = vm_file.readlines()
-    vm_file.close()
+    vm_files = []
+    if os.path.isdir(sys.argv[1]):
+        dir_path = sys.argv[1]
+        vm_files = glob.glob(dir_path + "/*.vm")
+    else:
+        vm_files.append(sys.argv[1])
 
 
-    # file_name used for naming static variables per specification
-    file_path = vm_file_name.strip(".vm")
-    file_name = file_path.split('/')[-1]
-
-
-    # parser cleans spaces/comments and parses the  vm line elements
-    parsed_lines = []
-    parser(vm_lines, parsed_lines)
-
-
-    # translates the parsed vm lines into asm code
     asm_lines = []
-    for i in range(len(parsed_lines)):
-        code_writer(parsed_lines[i], asm_lines, file_name)
+    for file in vm_files:
+
+        # opens input .vm file and writes each line to a list
+        vm_file = open(file, 'r')
+        vm_lines = vm_file.readlines()
+        vm_file.close()
+
+        # parser cleans spaces/comments and parses the  vm line elements
+        parsed_lines = []
+        parser(vm_lines, parsed_lines)
+
+        # file_name used for naming static variables per specification
+        file_path = file.strip(".vm")
+        file_name = file_path.split('/')[-1]
+
+        # translates the parsed vm lines into asm code
+        for i in range(len(parsed_lines)):
+            code_writer(parsed_lines[i], asm_lines, file_name)
 
 
     # creates .asm output file and opens for writing
+    if os.path.isdir(sys.argv[1]):
+        dir_name = dir_path.split('/')[-1]
+        file_path = dir_path + '/' + dir_name
+        boot_code = bootstrapper(file_name)
+        asm_lines.insert(0, boot_code )
+
     asm_file_name = file_path + ".asm"
     asm_file = open(asm_file_name, 'w')
     asm_file.writelines(asm_lines)
@@ -94,23 +105,69 @@ def code_writer(parsed_line, asm_lines, file_name):
     if parsed_line.arg1 == 'function':
         function_writer(parsed_line, asm_lines, file_name)
 
+    if parsed_line.arg1 == 'call':
+        call_writer(parsed_line, asm_lines, file_name)
+
+    if parsed_line.arg1 == 'return':
+        return_writer(parsed_line, asm_lines, file_name)
+
+
+def return_writer(parsed_line, asm_lines, file_name):
+
+    # stores the endframe and return address of caller in temporary variables
+    asm_lines.append(function_dict['endframe_store'])
+    asm_lines.append(function_dict['retadd_store'])
+
+    # pushes return value back to top of stack of the caller
+    new_vm_line = line_elements("pop argument 0\n","c_pop", 'pop', 'argument', '0')
+    code_writer(new_vm_line, asm_lines, file_name)
+
+    # restores caller's pointers for SP, LCL, ARG, THIS, THAT
+    asm_lines.append(function_dict['stack_restore'])
+
+    # returns to caller's return address
+    asm_lines.append(function_dict['retadd_jump'])
+
+
+def call_writer(parsed_line, asm_lines, file_name):
+
+    # generates return address and pushes to stack
+    global call_count
+    asm_lines.append(function_dict['call_addpush'])
+    return_address = '$RETADD$' + str(call_count)
+    asm_lines[-1] = asm_lines[-1].replace('$RETADD$', return_address)
+    call_count += 1
+
+    # pushes caller state - LCL, ARG, THIS, THAT
+    asm_lines += function_dict['call_segsaver']
+
+    # specifies ARG pointer for callee  based on number of arguments
+    asm_lines += function_dict['arg_set_1']
+    asm_lines += function_dict['arg_set_2'] * (5+int(parsed_line.arg3))
+    asm_lines += function_dict['arg_set_3']
+
+     # specifies LCL pointer for callee function
+    asm_lines += function_dict['lcl_set']
+
+    # generates code to goto callee
+    asm_lines.append(branch_dict['goto'])
+    asm_lines[-1] = asm_lines[-1].replace('$LABEL$', parsed_line.arg2)
+
+    # adds return address label
+    asm_lines.append(branch_dict['label'])
+    asm_lines[-1] = asm_lines[-1].replace('$LABEL$', return_address)
+
 
 def function_writer(parsed_line, asm_lines, file_name):
     asm_lines.append(branch_dict['label'])
     asm_lines[-1] = asm_lines[-1].replace('$LABEL$', parsed_line.arg2)
+
 
     # pushes constant 0 for each local cell function needs, as indicated by arg3 of function command
     for i in range(int(parsed_line.arg3)):
         new_vm_line = line_elements("push constant 0\n","c_push", 'push', 'constant', '0')
         code_writer(new_vm_line, asm_lines, file_name)
 
-
-def arith_writer(parsed_line, asm_lines):
-    global relation_count
-    asm_lines.append(arith_dict[parsed_line.arg1])
-    if parsed_line.arg1 in ('gt', 'lt', 'eq'):
-        asm_lines[-1] = asm_lines[-1].replace('$$TRUE$$', '$$TRUE$$' + str(relation_count)) # if relational operator, replaces template label with unique label
-        relation_count += 1
 
 def pushpop_writer(parsed_line, asm_lines, file_name):
 
@@ -128,16 +185,32 @@ def pushpop_writer(parsed_line, asm_lines, file_name):
             asm_lines[-1] = asm_lines[-1].replace('$DUMMY$', 'THAT')
     if parsed_line.arg2 == 'temp':
         if parsed_line.arg1 == 'pop':
-            asm_lines[-1] += "D=A\n"
+            asm_lines[-1] += "D=A"
         asm_lines[-1] = asm_lines[-1].replace('$DUMMY$', str(5+int(parsed_line.arg3)))
 
     if parsed_line.arg2 != 'constant':
         asm_lines[-1] += pushpop_dict[parsed_line.arg1]
 
 
+def arith_writer(parsed_line, asm_lines):
+    global relation_count
+    asm_lines.append(arith_dict[parsed_line.arg1])
+    if parsed_line.arg1 in ('gt', 'lt', 'eq'):
+        asm_lines[-1] = asm_lines[-1].replace('$$TRUE$$', '$$TRUE$$' + str(relation_count)) # if relational operator, replaces template label with unique label
+        relation_count += 1
 
-def bootstrapper():
-    return
-    #TBU
+
+
+
+def bootstrapper(file_name):
+    sys_init_code = []
+    new_vm_line = line_elements("call Sys.init 0\n","c_call", 'call', 'Sys.init', '0')
+    code_writer(new_vm_line, sys_init_code, file_name)
+
+    boot_code = function_dict['boot_code']
+    for line in sys_init_code:
+        boot_code += line
+
+    return boot_code
 
 main()

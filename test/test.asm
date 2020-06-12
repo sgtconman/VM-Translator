@@ -1,26 +1,51 @@
-// push static 2
-@test.2
-D=M
-@SP
-M=M+1
-A=M-1
-M=D
-// goto testlabel
-@testlabel
-0;JMP
-// label testlabel
-(testlabel)
-// push constant -1
-@-1
+// call dopefunction 3
+@$RETADD$0
 D=A
 @SP
 M=M+1
 A=M-1
 M=D
-// if-goto testlabel
-@SP
-M=M-1
-A=M
+@LCL$
 D=M
-@testlabel
-D+1;JEQ
+@SP
+M=M+1
+A=M-1
+M=D
+@ARG
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@THIS
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@THAT
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@SP
+A=M
+A=A-1
+A=A-1
+A=A-1
+A=A-1
+A=A-1
+A=A-1
+A=A-1
+A=A-1
+D=A
+@ARG
+M=D
+@SP
+D=M
+@LCL
+M=D
+@dopefunction
+0;JMP
+($RETADD$0)

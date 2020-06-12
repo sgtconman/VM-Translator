@@ -3,6 +3,7 @@ c_type = {}
 arith_dict = {}
 pushpop_dict = {}
 branch_dict = {}
+function_dict = {}
 
 
 def dict_initializer():
@@ -11,7 +12,7 @@ def dict_initializer():
     c_type.update([ ('add', 'c_arith'), ('sub', 'c_arith'), ('neg', 'c_arith'), ('eq', 'c_arith'),
     ('gt', 'c_arith'), ('lt', 'c_arith'), ('and', 'c_arith'), ('or', 'c_arith'), ('not', 'c_arith'),
     ('pop', 'c_pop'), ('push', 'c_push'), ('label', 'c_label'), ('goto', 'c_goto'), ('if-goto', 'c_if'),
-    ('function', 'c_function'), ('call', 'c_call')])
+    ('function', 'c_function'), ('call', 'c_call'), ('return', 'c_return')])
 
     arith_dict['add'] = """@SP
 M=M-1
@@ -143,7 +144,8 @@ D=A
 @THAT
 AD=D+M"""
 
-    pushpop_dict['static'] = """@$DUMMY$"""
+    pushpop_dict['static'] = """@$DUMMY$
+"""
 
     pushpop_dict['temp'] = """@$DUMMY$
 """
@@ -174,3 +176,114 @@ D=M
 @$LABEL$
 D;JNE
 """
+
+    function_dict['call_addpush'] = """@$RETADD$
+D=A
+@SP
+M=M+1
+A=M-1
+M=D
+"""
+
+    function_dict['call_segsaver'] = """@LCL
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@ARG
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@THIS
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+@THAT
+D=M
+@SP
+M=M+1
+A=M-1
+M=D
+"""
+
+    function_dict['arg_set_1'] = """@SP
+A=M
+"""
+
+    function_dict['arg_set_2'] = """A=A-1
+"""
+
+    function_dict['arg_set_3'] = """D=A
+@ARG
+M=D
+"""
+
+    function_dict['lcl_set'] = """@SP
+D=M
+@LCL
+M=D
+"""
+
+    function_dict['endframe_store'] = """@LCL
+D=M
+@R14
+M=D
+"""
+
+    function_dict['retadd_store'] = """@LCL
+D=M
+@5
+A=D-A
+D=M
+@R15
+M=D
+"""
+
+    function_dict['stack_restore'] = """// SP = ARG +1
+@ARG
+D=M+1
+@SP
+M=D
+// THAT = endframe - 1
+@R14
+AM=M-1
+D=M
+@THAT
+M=D
+// THIS = endframe - 2
+@R14
+AM=M-1
+D=M
+@THIS
+M=D
+// ARG = endframe - 3
+@R14
+AM=M-1
+D=M
+@ARG
+M=D
+// LCL = endframe - 4
+@R14
+AM=M-1
+D=M
+@LCL
+M=D
+"""
+
+    function_dict['retadd_jump'] = """@R15
+A=M
+0;JMP
+"""
+
+
+    function_dict['boot_code'] ="""@256
+D=A
+@SP
+M=D
+"""
+
