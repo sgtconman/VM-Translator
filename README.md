@@ -1,6 +1,7 @@
 # VM-Translator
 VM Translator for Jack VM to Hack Assembly using Python.
 
-Accepts .vm code file from local directory and outputs .asm assembly code file. Jack VM Language is similar to Java Bytecode
+Inputs: .vm code file from local directory or local directory containing .vm files
+Outputs: .asm assembly code file.
 
-Translator architecture based generally on Nand2Tetris book
+Jack VM Language is similar to Java Bytecode. Translator architecture based generally on Nand2Tetris book
